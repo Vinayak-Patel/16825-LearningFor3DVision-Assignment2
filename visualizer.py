@@ -21,8 +21,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imageio
 from tqdm.notebook import tqdm
-from IPython.display import Image
-from PIL import Image, ImageDraw
 device = torch.device('cuda')
 from utils_vox import voxelize_xyz
 
