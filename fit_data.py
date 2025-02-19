@@ -9,6 +9,7 @@ from pytorch3d.ops import sample_points_from_meshes
 from pytorch3d.structures import Meshes
 import dataset_location
 import torch
+import visualizer
 
 
 
@@ -18,7 +19,7 @@ import torch
 def get_args_parser():
     parser = argparse.ArgumentParser('Model Fit', add_help=False)
     parser.add_argument('--lr', default=4e-4, type=float)
-    parser.add_argument('--max_iter', default=100000, type=int)
+    parser.add_argument('--max_iter', default=10000, type=int)
     parser.add_argument('--type', default='vox', choices=['vox', 'point', 'mesh'], type=str)
     parser.add_argument('--n_points', default=5000, type=int)
     parser.add_argument('--w_chamfer', default=1.0, type=float)
@@ -58,7 +59,8 @@ def fit_mesh(mesh_src, mesh_tgt, args):
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))        
     
     mesh_src.offset_verts_(deform_vertices_src)
-
+    visualizer.render_mesh(mesh_src, "./results/q1/optimized_mesh.gif")
+    visualizer.render_mesh(mesh_tgt, "./results/q1/ground_truth_mesh.gif")
     print('Done!')
 
 
@@ -81,6 +83,9 @@ def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
         loss_vis = loss.cpu().item()
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
+    
+    visualizer.render_point_cloud(pointclouds_src, "./results/q1/optimized_pointcloud.gif")
+    visualizer.render_point_cloud(pointclouds_tgt, "./results/q1/ground_truth_pointcloud.gif")
     
     print('Done!')
 
@@ -105,6 +110,8 @@ def fit_voxel(voxels_src, voxels_tgt, args):
 
         print("[%4d/%4d]; ttime: %.0f (%.2f); loss: %.3f" % (step, args.max_iter, total_time,  iter_time, loss_vis))
     
+    visualizer.render_voxels(voxels_src, "./results/q1/optimized_voxel.gif")
+    visualizer.render_voxels(voxels_tgt, "./results/q1/ground_truth_voxel.gif")
     print('Done!')
 
 
