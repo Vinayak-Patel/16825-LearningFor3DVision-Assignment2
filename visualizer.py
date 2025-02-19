@@ -188,16 +188,19 @@ from utils_vox import voxelize_xyz
 
 # Point Cloud Rendering
 def render_point_cloud(points, output_path, num_views=120, image_size=256):
-    colors = torch.tensor([[1.0, 0.0, 0.0]] * points.shape[0])  # Default red color
+    if points.dim() == 2:
+        points = points.unsqueeze(0)  # Ensure shape (B, N, 3)
+    colors = torch.tensor([[1.0, 0.0, 0.0]] * points.shape[1], device=device).unsqueeze(0)  # Default red color
     angles = torch.linspace(-180, 180, num_views)
     R, T = rdr.look_at_view_transform(dist=10, elev=0, azim=angles)
     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
     lights = rdr.PointLights(location=[[0, 0, -3]], device=device)
+    
     rasterizer = rdr.PointsRasterizer(cameras=cameras)
     compositor = rdr.AlphaCompositor()
     renderer = rdr.PointsRenderer(rasterizer=rasterizer, compositor=compositor)
     
-    pc = Pointclouds(points=points.unsqueeze(0), features=colors.unsqueeze(0)).to(device)
+    pc = Pointclouds(points=points, features=colors).to(device)
     images = renderer(pc.extend(num_views), cameras=cameras, lights=lights)
     images = images.cpu().numpy()[..., :3] * 255
     imageio.mimsave(output_path, images.astype(np.uint8), fps=30, loop=0)
