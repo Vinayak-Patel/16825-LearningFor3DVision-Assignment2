@@ -19,7 +19,7 @@ from pytorch3d.structures import Pointclouds, Meshes
 import numpy as np
 import matplotlib.pyplot as plt
 import imageio
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 device = torch.device('cuda')
 from utils_vox import voxelize_xyz
 
