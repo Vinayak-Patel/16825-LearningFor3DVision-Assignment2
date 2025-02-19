@@ -64,7 +64,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
         R, T = rdr.look_at_view_transform(dist=distance, elev=elevation, azim=angle)
         cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
         render = renderer(mesh, cameras=cameras)
-        images.append((render[0, ..., :3].cpu().numpy() * 255).astype(np.uint8))
+        images.append((render[0, ..., :3].detach().cpu().numpy() * 255).astype(np.uint8))
     
     imageio.mimsave(output_path, images, fps=30)
 
