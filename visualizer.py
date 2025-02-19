@@ -32,7 +32,7 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
     angles = torch.linspace(-180, 180, num_views)
     R, T = rdr.look_at_view_transform(dist=10, elev=0, azim=angles)
     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
-    lights = rdr.PointLights(location=[[0, 0, -3]], device=device)
+    lights = rdr.PointLights(location=[[0, 0, 0]], device=device)
     
     rasterizer = rdr.PointsRasterizer(cameras=cameras)
     compositor = rdr.AlphaCompositor()
