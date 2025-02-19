@@ -193,7 +193,9 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
     R, T = rdr.look_at_view_transform(dist=10, elev=0, azim=angles)
     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
     lights = rdr.PointLights(location=[[0, 0, -3]], device=device)
-    renderer = rdr.PointsRenderer()
+    rasterizer = rdr.PointsRasterizer(cameras=cameras)
+    compositor = rdr.AlphaCompositor()
+    renderer = rdr.PointsRenderer(rasterizer=rasterizer, compositor=compositor)
     
     pc = Pointclouds(points=points.unsqueeze(0), features=colors.unsqueeze(0)).to(device)
     images = renderer(pc.extend(num_views), cameras=cameras, lights=lights)
