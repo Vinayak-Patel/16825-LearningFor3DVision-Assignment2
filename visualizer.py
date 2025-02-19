@@ -45,6 +45,10 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 
 # Mesh Rendering
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30):
+    verts = mesh.verts_packed()
+    verts_rgb = torch.ones_like(verts)[None]  # Default white color
+    mesh.textures = rdr.TexturesVertex(verts_features=verts_rgb)
+    
     rasterizer = rdr.MeshRasterizer(
         cameras=rdr.FoVPerspectiveCameras(device=device),
         raster_settings=rdr.RasterizationSettings(
