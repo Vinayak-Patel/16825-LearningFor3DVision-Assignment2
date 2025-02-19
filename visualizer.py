@@ -45,7 +45,14 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 
 # Mesh Rendering
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30):
-    renderer = rdr.MeshRenderer()
+    rasterizer = rdr.MeshRasterizer(
+        cameras=rdr.FoVPerspectiveCameras(device=device),
+        raster_settings=rdr.RasterizationSettings(
+            image_size=512, blur_radius=0.0, faces_per_pixel=1
+        )
+    )
+    shader = rdr.HardPhongShader(device=device, cameras=rdr.FoVPerspectiveCameras(device=device))
+    renderer = rdr.MeshRenderer(rasterizer=rasterizer, shader=shader)
     angles = torch.linspace(-180, 180, num_views)
     images = []
     
