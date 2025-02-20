@@ -12,6 +12,7 @@ import pickle
 import matplotlib.pyplot as plt
 import mcubes
 import torch
+import pytorch3d
 from pytorch3d.structures import Meshes
 import pytorch3d.renderer as rdr
 from pytorch3d.io import load_objs_as_meshes
@@ -69,12 +70,13 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     imageio.mimsave(output_path, images, fps=30)
 
 # Voxel Rendering
-def render_voxels(points, output_path, Z=32, Y=32, X=32, num_views=120):
-    points = torch.clamp(points, 0, 1)
-    voxels = voxelize_xyz(points.unsqueeze(0), Z, Y, X)
-    voxels = voxels.squeeze().cpu().numpy()
-    verts, faces = mcubes.marching_cubes(voxels, 0.5)
-    mesh = Meshes(verts=[torch.tensor(verts, device=device)], faces=[torch.tensor(faces, device=device)])
+def render_voxels(voxels, output_path, threshold = 0.5, num_views=120):
+    mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
+    # points = torch.clamp(points, 0, 1)
+    # voxels = voxelize_xyz(points.unsqueeze(0), Z, Y, X)
+    # voxels = voxels.squeeze().cpu().numpy()
+    # verts, faces = mcubes.marching_cubes(voxels, 0.5)
+    # mesh = Meshes(verts=[torch.tensor(verts, device=device)], faces=[torch.tensor(faces, device=device)])
     render_mesh(mesh, output_path, num_views=num_views)
 
 if __name__ == "__main__":
