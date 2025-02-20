@@ -70,6 +70,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
 
 # Voxel Rendering
 def render_voxels(points, output_path, Z=32, Y=32, X=32, num_views=120):
+    points = torch.clamp(points, 0, 1)
     voxels = voxelize_xyz(points.unsqueeze(0), Z, Y, X)
     voxels = voxels.squeeze().cpu().numpy()
     verts, faces = mcubes.marching_cubes(voxels, 0.5)
