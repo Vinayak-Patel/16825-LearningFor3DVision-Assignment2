@@ -23,27 +23,15 @@ class SingleViewto3D(nn.Module):
             # pass
             # TODO:
             self.decoder = nn.Sequential(
-                nn.Linear(512, 256),
-                nn.BatchNorm1d(256),
+                nn.Linear(512, 1024),
+                nn.BatchNorm1d(1024),
                 nn.ReLU(),
                 
-                nn.Linear(256, 4*4*4*64),
-                nn.BatchNorm1d(4*4*4*64),
-                nn.ReLU(),     
-                nn.ConvTranspose3d(64, 32, kernel_size=4, stride=2, padding=1),
-                nn.BatchNorm3d(32),
+                nn.Linear(1024, 2048),
+                nn.BatchNorm1d(2048),
                 nn.ReLU(),
-                
-                nn.ConvTranspose3d(32, 16, kernel_size=4, stride=2, padding=1),
-                nn.BatchNorm3d(16),
-                nn.ReLU(),
-                
-                nn.ConvTranspose3d(16, 8, kernel_size=4, stride=2, padding=1),
-                nn.BatchNorm3d(8),
-                nn.ReLU(),
-                
-                nn.ConvTranspose3d(8, 1, kernel_size=4, stride=2, padding=1),
-                nn.Sigmoid()  
+                     
+                nn.Linear(2048, 32*32*32),
             )       
         elif args.type == "point":
             # Input: b x 512
@@ -100,14 +88,8 @@ class SingleViewto3D(nn.Module):
         # call decoder
         if args.type == "vox":
             # TODO:
-            x = self.decoder[0:6](encoded_feat)
-            
-            # Reshape for 3D convolutions
-            x = x.view(-1, 64, 4, 4, 4)
-            
-            # Process through remaining 3D transpose convolutions
-            voxels_pred = self.decoder[6:](x)
-            voxels_pred = voxels_pred.squeeze(1)             
+            voxels_pred = self.decoder(encoded_feat)
+            voxels_pred = voxels_pred.view(-1, 32, 32, 32)   
             return voxels_pred
 
         elif args.type == "point":
