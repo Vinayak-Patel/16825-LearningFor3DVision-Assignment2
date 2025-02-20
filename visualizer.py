@@ -103,38 +103,46 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
 def render_voxels(voxels, output_path, num_views=120):
     max_val = 1.0
     min_val = 0.0
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    # Ensure voxels are within valid range
+    voxels = voxels.clamp(0, 1)
+    print("Voxel min:", voxels.min().item(), "Voxel max:", voxels.max().item())
+
     data = voxels.detach().cpu().numpy()
     data = np.squeeze(data)
-    size = voxels.shape[0]
-    vertices, faces = mcubes.marching_cubes(
-        mcubes.smooth(data),
-        isovalue=0.5
-    )
-    vertices = torch.tensor(vertices).float()
-    faces = torch.tensor(faces.astype(int))
-    vertices = (vertices/size)*(max_val-min_val)+min_val
 
-    colors = torch.ones_like(vertices)
-    textures = pytorch3d.renderer.TexturesVertex(colors.unsqueeze(0))
-    renderer = get_mesh_renderer()
-    mesh = Meshes([vertices],[faces],textures=textures).to(device)
-    # mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
+    size = voxels.shape[0]
     
-    # points = torch.clamp(points, 0, 1)
-    # voxels = voxelize_xyz(points.unsqueeze(0), Z, Y, X)
-    # voxels = voxels.squeeze().cpu().numpy()
-    # verts, faces = mcubes.marching_cubes(voxels, 0.5)
-    # mesh = Meshes(verts=[torch.tensor(verts, device=device)], faces=[torch.tensor(faces, device=device)])
-    # render_mesh(mesh, output_path, num_views=num_views)
+    # Smooth and apply marching cubes
+    vertices, faces = mcubes.marching_cubes(mcubes.smooth(data), isovalue=0.5)
+
+    # Convert to PyTorch tensors and ensure correct dtype
+    vertices = torch.tensor(vertices, dtype=torch.float32, device=device)
+    faces = torch.tensor(faces.astype(np.int64), device=device)
+
+    # Normalize vertices
+    vertices = (vertices / size) * (max_val - min_val) + min_val
+
+    # Ensure correct shape for textures
+    colors = torch.ones_like(vertices, device=device).unsqueeze(0)  # (1, V, 3)
+    textures = pytorch3d.renderer.TexturesVertex(verts_features=colors)
+
+    mesh = Meshes([vertices], [faces], textures=textures).to(device)
+
+    # Mesh Renderer
+    renderer = get_mesh_renderer()
+
     num_steps = num_views
     radius = 2.0
     images = []
+    
     for i in range(num_steps):
         angle = 2 * torch.pi * i / num_steps
-        angle = torch.tensor(angle)
+        angle = torch.tensor(angle, device=device)
         camera_position = torch.tensor([[radius * torch.cos(angle), 
-                                   0, 
-                                   radius * torch.sin(angle)]])
+                                         0, 
+                                         radius * torch.sin(angle)]], device=device)
         
         at = torch.tensor([[0.0, 0.0, 0.0]], device=device)
         up = torch.tensor([[0.0, 1.0, 0.0]], device=device)
@@ -143,12 +151,13 @@ def render_voxels(voxels, output_path, num_views=120):
         cameras = rdr.FoVPerspectiveCameras(R=R, T=T, fov=60, device=device)
 
         lights = pytorch3d.renderer.PointLights(location=[[0, 0, -3]], device=device)
+        
         print("checkpoint1")
         rend = renderer(mesh, cameras=cameras, lights=lights)
         print("checkpoint2")
         rend = rend.detach().cpu().numpy()[0, ..., :3]
         print("checkpoint3")
-        images.append((rend* 255).clip(0, 255).astype(np.uint8))
+        images.append((rend * 255).clip(0, 255).astype(np.uint8))
     
     duration = 1000 // 15
     imageio.mimsave(output_path, images, duration=duration, loop=0)
