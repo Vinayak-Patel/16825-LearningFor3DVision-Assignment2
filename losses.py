@@ -5,7 +5,7 @@ def voxel_loss(voxel_src,voxel_tgt):
 	# voxel_src: b x h x w x d
 	# voxel_tgt: b x h x w x d
 	# implement some loss for binary voxel grid
-    lossfn = torch.nn.BCELoss()
+    lossfn = torch.nn.BCEWithLogitsLoss()
     voxel_src = voxel_src.view(-1)
     voxel_tgt = voxel_tgt.view(-1)
     loss = lossfn(voxel_src, voxel_tgt)
