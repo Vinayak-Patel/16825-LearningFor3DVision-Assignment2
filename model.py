@@ -22,17 +22,32 @@ class SingleViewto3D(nn.Module):
             # Output: b x 32 x 32 x 32
             # pass
             # TODO:
-            self.decoder = nn.Sequential(
-                nn.Linear(512, 1024),
-                nn.BatchNorm1d(1024),
-                nn.ReLU(),
-                
-                nn.Linear(1024, 2048),
-                nn.BatchNorm1d(2048),
-                nn.ReLU(),
-                     
-                nn.Linear(2048, 32*32*32),
-            )       
+            self.layer0 = torch.nn.Sequential(
+                nn.Linear(512, 2048)
+            )
+            self.layer1 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(2048, 512, kernel_size=4, stride=2, bias=False, padding=1),
+            torch.nn.BatchNorm3d(512),
+            torch.nn.ReLU()
+            )
+            self.layer2 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(512, 128, kernel_size=4, stride=2, bias=False, padding=1),
+            torch.nn.BatchNorm3d(128),
+            torch.nn.ReLU()
+            )
+            self.layer3 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(128, 32, kernel_size=4, stride=2, bias=False, padding=1),
+            torch.nn.BatchNorm3d(32),
+            torch.nn.ReLU()
+            )
+            self.layer4 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(32, 8, kernel_size=4, stride=2, bias=False, padding=1),
+            torch.nn.BatchNorm3d(8),
+            torch.nn.ReLU()
+            )
+            self.layer5 = torch.nn.Sequential(
+            torch.nn.ConvTranspose3d(8, 1, kernel_size=1, bias=False),
+            )
         elif args.type == "point":
             # Input: b x 512
             # Output: b x args.n_points x 3  
@@ -88,9 +103,15 @@ class SingleViewto3D(nn.Module):
         # call decoder
         if args.type == "vox":
             # TODO:
-            voxels_pred = self.decoder(encoded_feat)
-            voxels_pred = voxels_pred.view(-1, 32, 32, 32)   
-            return voxels_pred
+                res = self.layer0(encoded_feat)
+                # res = feats.view((-1, 64, 2, 2, 2))
+                # res = res.view((-1, 512, 2, 2, 2))
+                res = self.layer1(res)
+                res = self.layer2(res)
+                res = self.layer3(res)
+                res = self.layer4(res)
+                res = self.layer5(res)
+                return res
 
         elif args.type == "point":
             # TODO:
