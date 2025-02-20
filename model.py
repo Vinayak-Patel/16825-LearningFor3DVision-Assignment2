@@ -26,7 +26,7 @@ class SingleViewto3D(nn.Module):
                 nn.Linear(512, 2048)
             )
             self.layer1 = torch.nn.Sequential(
-            torch.nn.ConvTranspose3d(2048, 512, kernel_size=4, stride=2, bias=False, padding=1),
+            torch.nn.ConvTranspose3d(256, 512, kernel_size=4, stride=2, bias=False, padding=1),
             torch.nn.BatchNorm3d(512),
             torch.nn.ReLU()
             )
@@ -105,7 +105,7 @@ class SingleViewto3D(nn.Module):
             # TODO:
                 res = self.layer0(encoded_feat)
                 # res = feats.view((-1, 64, 2, 2, 2))
-                # res = res.view((-1, 512, 2, 2, 2))
+                res = res.view((-1, 256, 2, 2, 2))
                 res = self.layer1(res)
                 res = self.layer2(res)
                 res = self.layer3(res)
