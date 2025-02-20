@@ -1,0 +1,4 @@
+__pycache__
+checkpoint_mesh.pth
+checkpoint_point.pth
+checkpoint_vox.pth
