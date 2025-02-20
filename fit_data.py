@@ -93,7 +93,7 @@ def fit_pointcloud(pointclouds_src, pointclouds_tgt, args):
 def fit_voxel(voxels_src, voxels_tgt, args):
     start_iter = 0
     start_time = time.time()    
-    optimizer = torch.optim.Adam([voxels_src], lr = args.lr)
+    optimizer = torch.optim.Adam([voxels_src], lr = args.lr, capturable=True)
     for step in range(start_iter, args.max_iter):
         iter_start_time = time.time()
 
