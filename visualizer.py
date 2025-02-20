@@ -24,6 +24,32 @@ from tqdm import tqdm
 device = torch.device('cuda')
 from utils_vox import voxelize_xyz
 
+def get_mesh_renderer(image_size=512):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    R, T = rdr.look_at_view_transform(2.7, 0, 0)
+    cameras = rdr.FoVPerspectiveCameras(device=device, R=R, T=T)
+    
+    raster_set = rdr.RasterizationSettings(
+        image_size=image_size, 
+        blur_radius=0.0, 
+        faces_per_pixel=1
+    )
+    
+    lights = rdr.PointLights(device=device, location=[[0.0, 0.0, -3.0]])
+    
+    render = rdr.MeshRenderer(
+        rasterizer=rdr.MeshRasterizer(
+            cameras=cameras, 
+            raster_settings=raster_set
+        ),
+        shader=rdr.HardPhongShader(
+            device=device, 
+            cameras=cameras,
+            lights=lights
+        )
+    )
+    return render
 
 # Point Cloud Rendering
 def render_point_cloud(points, output_path, num_views=120, image_size=256):
@@ -90,6 +116,7 @@ def render_voxels(voxels, output_path, num_views=120):
 
     colors = torch.ones_like(vertices)
     textures = pytorch3d.renderer.TexturesVertex(colors.unsqueeze(0))
+    renderer = get_mesh_renderer()
     mesh = Meshes([vertices],[faces],textures=textures).to(device)
     # mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
     
@@ -98,7 +125,33 @@ def render_voxels(voxels, output_path, num_views=120):
     # voxels = voxels.squeeze().cpu().numpy()
     # verts, faces = mcubes.marching_cubes(voxels, 0.5)
     # mesh = Meshes(verts=[torch.tensor(verts, device=device)], faces=[torch.tensor(faces, device=device)])
-    render_mesh(mesh, output_path, num_views=num_views)
+    # render_mesh(mesh, output_path, num_views=num_views)
+    num_steps = num_views
+    radius = 2.0
+    images = []
+    for i in range(num_steps):
+        angle = 2 * torch.pi * i / num_steps
+        angle = torch.tensor(angle)
+        camera_position = torch.tensor([[radius * torch.cos(angle), 
+                                   0, 
+                                   radius * torch.sin(angle)]])
+        
+        at = torch.tensor([[0.0, 0.0, 0.0]], device=device)
+        up = torch.tensor([[0.0, 1.0, 0.0]], device=device)
+
+        R, T = rdr.look_at_view_transform(eye=camera_position, at=at, up=up)
+        cameras = rdr.FoVPerspectiveCameras(R=R, T=T, fov=60, device=device)
+
+        lights = pytorch3d.renderer.PointLights(location=[[0, 0, -3]], device=device)
+        print("checkpoint1")
+        rend = renderer(mesh, cameras=cameras, lights=lights)
+        print("checkpoint2")
+        rend = rend.detach().cpu().numpy()[0, ..., :3]
+        print("checkpoint3")
+        images.append((rend* 255).clip(0, 255).astype(np.uint8))
+    
+    duration = 1000 // 15
+    imageio.mimsave(output_path, images, duration=duration, loop=0)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
