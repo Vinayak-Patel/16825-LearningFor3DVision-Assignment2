@@ -120,7 +120,8 @@ def render_voxels(voxels, output_path, num_views=120):
     # Convert to PyTorch tensors and ensure correct dtype
     vertices = torch.tensor(vertices, dtype=torch.float32, device=device)
     faces = torch.tensor(faces.astype(np.int64), device=device)
-
+    vertices = vertices.unsqueeze(0)
+    faces = faces.unsqueeze(0)
     # Normalize vertices
     vertices = (vertices / size) * (max_val - min_val) + min_val
 
