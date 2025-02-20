@@ -169,7 +169,7 @@ def render_voxels(voxels, output_path, num_views=120):
     vertices = (vertices / size) * (max_val - min_val) + min_val
 
     # Ensure correct shape for textures
-    colors = torch.ones_like(vertices, device=device).unsqueeze(0)  # (1, V, 3)
+    colors = torch.ones_like(vertices, device=device)  # (1, V, 3)
     textures = pytorch3d.renderer.TexturesVertex(verts_features=colors)
 
     mesh = Meshes([vertices], [faces], textures=textures).to(device)
