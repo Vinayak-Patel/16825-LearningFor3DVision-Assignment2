@@ -84,7 +84,7 @@ def render_voxels(voxels, output_path, num_views=120):
     faces = torch.tensor(faces.astype(int))
     vertices = (vertices/size)*(max_val-min_val)+min_val
 
-    colors = torch.ones_like(voxels)
+    colors = torch.ones_like(vertices)
     textures = pytorch3d.renderer.TexturesVertex(colors.unsqueeze(0))
     mesh = Meshes([vertices],[faces],textures=textures).to(device)
     # mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
