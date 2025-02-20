@@ -46,6 +46,8 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 
 # Mesh Rendering
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    mesh = mesh.to(device)
     verts = mesh.verts_packed()
     verts_rgb = torch.ones_like(verts)[None]  # Default white color
     mesh.textures = rdr.TexturesVertex(verts_features=verts_rgb)
@@ -64,6 +66,8 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     for angle in tqdm(angles):
         R, T = rdr.look_at_view_transform(dist=distance, elev=elevation, azim=angle)
         cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
+        
+        torch.cuda.synchronize()
         render = renderer(mesh, cameras=cameras)
         images.append((render[0, ..., :3].detach().cpu().numpy() * 255).astype(np.uint8))
     
