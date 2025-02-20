@@ -14,6 +14,9 @@ import matplotlib.pyplot as plt
 from pytorch3d.transforms import Rotate, axis_angle_to_matrix
 import math
 import numpy as np
+import visualizer
+from PIL import image
+import torchvision.transforms
 
 def get_args_parser():
     parser = argparse.ArgumentParser('Singleto3D', add_help=False)
@@ -165,10 +168,27 @@ def evaluate_model(args):
         metrics = evaluate(predictions, mesh_gt, thresholds, args)
 
         # TODO:
-        # if (step % args.vis_freq) == 0:
+        to_pil = torchvision.transforms.ToPILImage()
+        image = images_gt.squeeze(0)
+        image = image.permute(2, 0, 1)
+        img = to_pil(image)
+        if (step % args.vis_freq) == 0 and metrics != False:
         #     # visualization block
-        #     #  rend = 
-        #     plt.imsave(f'vis/{step}_{args.type}.png', rend)
+              if args.type == 'point':
+                  visualizer.render_point_cloud(predictions, output_path='results/q2_2_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q2_2_'+str(step)+'_gt.gif')
+                  img.save('results/q2_2_'+str(step)+'_img.png')
+                  
+              if args.type == 'vox':
+                  visualizer.render_voxels(predictions, output_path='results/q2_1_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q2_1_'+str(step)+'_gt.gif')
+                  img.save('results/q2_1_'+str(step)+'_img.png')
+                  
+              if args.type == 'mesh':
+                  visualizer.render_mesh(predictions, output_path='results/q2_3_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q2_3_'+str(step)+'_gt.gif')
+                  img.save('results/q2_3_'+str(step)+'_img.png')
+                  
       
 
         total_time = time.time() - start_time
