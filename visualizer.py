@@ -70,8 +70,25 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     imageio.mimsave(output_path, images, fps=30)
 
 # Voxel Rendering
-def render_voxels(voxels, output_path, threshold = 0.5, num_views=120):
-    mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
+def render_voxels(voxels, output_path, num_views=120):
+    max_val = 1.0
+    min_val = 0.0
+    data = voxels.detach().cpu().numpy()
+    data = np.squeeze(data)
+    size = voxels.shape[0]
+    vertices, faces = mcubes.marching_cubes(
+        mcubes.smooth(data),
+        isovalue=0.5
+    )
+    vertices = torch.tensor(vertices).float()
+    faces = torch.tensor(faces.astype(int))
+    vertices = (vertices/size)*(max_val-min_val)+min_val
+
+    colors = torch.ones_like(voxels)
+    textures = pytorch3d.renderer.TexturesVertex(colors.unsqueeze(0))
+    mesh = Meshes([vertices],[faces],textures=textures).to(device)
+    # mesh = pytorch3d.ops.cubify(voxels, thresh=threshold).to(device)
+    
     # points = torch.clamp(points, 0, 1)
     # voxels = voxelize_xyz(points.unsqueeze(0), Z, Y, X)
     # voxels = voxels.squeeze().cpu().numpy()
