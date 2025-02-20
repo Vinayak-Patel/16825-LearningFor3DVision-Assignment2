@@ -71,7 +71,7 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
     imageio.mimsave(output_path, images.astype(np.uint8), fps=30, loop=0)
 
 # Mesh Rendering
-def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30):
+def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30, textures=None):
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # mesh = mesh.to(device)
     # verts = mesh.verts_packed()
