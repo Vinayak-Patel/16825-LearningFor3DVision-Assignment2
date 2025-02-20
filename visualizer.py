@@ -71,7 +71,7 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
     imageio.mimsave(output_path, images.astype(np.uint8), fps=30, loop=0)
 
 # Mesh Rendering
-def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30, textures=None):
+def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30, textures=None, fov=60):
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # mesh = mesh.to(device)
     # verts = mesh.verts_packed()
@@ -130,7 +130,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     azimuth = np.linspace(-180, 180, num=num_views)
     R, T = pytorch3d.renderer.look_at_view_transform(dist = distance, elev = elevation, 
                                                      azim =azimuth)
-    cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= 60, device=device)
+    cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= fov, device=device)
     renderer = utils.get_mesh_renderer(image_size=image_size, device=device)
     lights = pytorch3d.renderer.PointLights(location=[[0, 0, 3]], device=device)
     
@@ -212,7 +212,7 @@ def render_voxels(voxels, output_path, num_views=120):
     #     print("Generated mesh is empty. Skipping visualization.")
     #     return
     render_mesh(mesh, output_path,textures=None,num_views= 120, 
-                    image_size=256, distance= 3, fov =60, fps=12, elev=1)
+                    image_size=256, distance= 3, fov=60, fps=12, elev=1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
