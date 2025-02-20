@@ -21,8 +21,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import imageio
 from tqdm import tqdm
+import utils
 device = torch.device('cuda')
-from utils_vox import voxelize_xyz
 
 def get_mesh_renderer(image_size=512):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -72,32 +72,74 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 
 # Mesh Rendering
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30):
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    mesh = mesh.to(device)
-    verts = mesh.verts_packed()
-    verts_rgb = torch.ones_like(verts)[None]  # Default white color
-    mesh.textures = rdr.TexturesVertex(verts_features=verts_rgb)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # mesh = mesh.to(device)
+    # verts = mesh.verts_packed()
+    # verts_rgb = torch.ones_like(verts)[None]  # Default white color
+    # mesh.textures = rdr.TexturesVertex(verts_features=verts_rgb)
     
-    rasterizer = rdr.MeshRasterizer(
-        cameras=rdr.FoVPerspectiveCameras(device=device),
-        raster_settings=rdr.RasterizationSettings(
-            image_size=512, blur_radius=0.0, faces_per_pixel=1
-        )
-    )
-    shader = rdr.HardPhongShader(device=device, cameras=rdr.FoVPerspectiveCameras(device=device))
-    renderer = rdr.MeshRenderer(rasterizer=rasterizer, shader=shader)
-    angles = torch.linspace(-180, 180, num_views)
-    images = []
+    # rasterizer = rdr.MeshRasterizer(
+    #     cameras=rdr.FoVPerspectiveCameras(device=device),
+    #     raster_settings=rdr.RasterizationSettings(
+    #         image_size=512, blur_radius=0.0, faces_per_pixel=1
+    #     )
+    # )
+    # shader = rdr.HardPhongShader(device=device, cameras=rdr.FoVPerspectiveCameras(device=device))
+    # renderer = rdr.MeshRenderer(rasterizer=rasterizer, shader=shader)
+    # angles = torch.linspace(-180, 180, num_views)
+    # images = []
     
-    for angle in tqdm(angles):
-        R, T = rdr.look_at_view_transform(dist=distance, elev=elevation, azim=angle)
-        cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
+    # for angle in tqdm(angles):
+    #     R, T = rdr.look_at_view_transform(dist=distance, elev=elevation, azim=angle)
+    #     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
         
-        torch.cuda.synchronize()
-        render = renderer(mesh, cameras=cameras)
-        images.append((render[0, ..., :3].detach().cpu().numpy() * 255).astype(np.uint8))
+    #     torch.cuda.synchronize()
+    #     render = renderer(mesh, cameras=cameras)
+    #     images.append((render[0, ..., :3].detach().cpu().numpy() * 255).astype(np.uint8))
     
-    imageio.mimsave(output_path, images, fps=30)
+    # imageio.mimsave(output_path, images, fps=30)
+    # print(device)
+    vertices = mesh.verts_list()[0]
+    faces = mesh.faces_list()[0]
+    vertices = vertices.unsqueeze(0)  # (N_v, 3) -> (1, N_v, 3)
+    faces = faces.unsqueeze(0)     # (N_f, 3) -> (1, N_f, 3)
+    
+   
+    if textures is None:
+        # textures = torch.ones_like(vertices)  # (1, N_v, 3)
+        # textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+        
+        if vertices.numel() > 0:
+            textures = torch.ones_like(vertices)
+            textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+        else:
+            textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
+
+        # if vertices.numel() > 0:
+        #     textures = torch.ones_like(vertices)
+        # else:
+        #     print("Vertices are empty; using default zero textures.")
+        #     textures = torch.zeros(1, 1, 1)
+    
+    render_mesh = pytorch3d.structures.Meshes(
+            verts=vertices,
+            faces=faces,
+            textures=pytorch3d.renderer.TexturesVertex(textures),
+    ).to(device)
+    
+    azimuth = np.linspace(-180, 180, num=num_views)
+    R, T = pytorch3d.renderer.look_at_view_transform(dist = distance, elev = elevation, 
+                                                     azim =azimuth)
+    cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= 60, device=device)
+    renderer = utils.get_mesh_renderer(image_size=image_size, device=device)
+    lights = pytorch3d.renderer.PointLights(location=[[0, 0, 3]], device=device)
+    
+    images = renderer(render_mesh.extend(num_views), cameras= cameras, lights= lights)
+    images = images.detach().cpu().numpy()[..., :3]
+    images = (images * 255).clip(0, 255).astype(np.uint8)
+    # images = images.cpu().detach().numpy()
+    imageio.mimsave(output_path, images, fps=30, format='gif', loop=0)
+    return
 
 # Voxel Rendering
 def render_voxels(voxels, output_path, num_views=120):
@@ -107,6 +149,7 @@ def render_voxels(voxels, output_path, num_views=120):
 
     # Ensure voxels are within valid range
     voxels = voxels.clamp(0, 1)
+    
     print("Voxel min:", voxels.min().item(), "Voxel max:", voxels.max().item())
 
     data = voxels.detach().cpu().numpy()
