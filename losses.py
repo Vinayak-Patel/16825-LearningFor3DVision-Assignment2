@@ -1,4 +1,5 @@
 import torch
+import pytorch3d
 from pytorch3d.loss import mesh_laplacian_smoothing
 
 # define losses
