@@ -15,7 +15,7 @@ from pytorch3d.transforms import Rotate, axis_angle_to_matrix
 import math
 import numpy as np
 import visualizer
-from PIL import image
+from PIL import Image
 import torchvision.transforms
 
 def get_args_parser():
