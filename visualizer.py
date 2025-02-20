@@ -211,7 +211,7 @@ def render_voxels(voxels, output_path, num_views=120):
     # if len(mesh.verts_list()[0]) == 0:
     #     print("Generated mesh is empty. Skipping visualization.")
     #     return
-    render_mesh(mesh, output_path,textures=None,number_views= 20, 
+    render_mesh(mesh, output_path,textures=None,num_views= 120, 
                     image_size=256, distance= 3, fov =60, fps=12, elev=1)
 
 if __name__ == "__main__":
