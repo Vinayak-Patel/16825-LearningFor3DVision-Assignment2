@@ -18,8 +18,8 @@ def chamfer_loss(point_cloud_src,point_cloud_tgt):
 	# implement chamfer loss from scratch
     dist_st = pytorch3d.ops.knn_points(point_cloud_src, point_cloud_tgt, K=1)
     dist_ts = pytorch3d.ops.knn_points(point_cloud_tgt, point_cloud_src, K=1)
-    loss_st = torch.mean(dist_st)
-    loss_ts = torch.mean(dist_ts)
+    loss_st = torch.mean(dist_st.dists)
+    loss_ts = torch.mean(dist_ts.dists)
     loss_chamfer = loss_st + loss_ts
     return loss_chamfer
 
