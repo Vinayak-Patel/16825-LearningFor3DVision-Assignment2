@@ -206,7 +206,7 @@ def render_voxels(voxels, output_path, num_views=120):
     # duration = 1000 // 15
     # imageio.mimsave(output_path, images, duration=duration, loop=0)
     voxels = voxels.squeeze(1)
-    mesh = pytorch3d.ops.cubify(voxels, thresh=0.5).to(device)
+    mesh = pytorch3d.ops.cubify(voxels, thresh=0.3).to(device)
     
     # # Check if the mesh is empty
     # if len(mesh.verts_list()[0]) == 0:
