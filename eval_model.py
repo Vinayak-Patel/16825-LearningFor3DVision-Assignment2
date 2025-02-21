@@ -96,6 +96,10 @@ def evaluate(predictions, mesh_gt, thresholds, args):
         vertices_src = torch.tensor(vertices_src).float()
         faces_src = torch.tensor(faces_src.astype(int))
         mesh_src = pytorch3d.structures.Meshes([vertices_src], [faces_src])
+        if vertices_src.shape == torch.Size([0, 3]):
+            print("Meshes are empty")
+            return False
+
         pred_points = sample_points_from_meshes(mesh_src, args.n_points)
         pred_points = utils_vox.Mem2Ref(pred_points, H, W, D)
         # Apply a rotation transform to align predicted voxels to gt mesh
@@ -166,6 +170,8 @@ def evaluate_model(args):
         predictions = model(images_gt, args)
 
         metrics = evaluate(predictions, mesh_gt, thresholds, args)
+        if metrics == False:
+            continue
 
         # TODO:
         to_pil = torchvision.transforms.ToPILImage()
