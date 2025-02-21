@@ -75,6 +75,7 @@ class SingleViewto3D(nn.Module):
                 nn.Linear(1024, 2048),
                 nn.ReLU(),
                 nn.Linear(2048, num_vertices * 3),
+                nn.Tanh()
             )
             
 
