@@ -22,7 +22,7 @@ class SingleViewto3D(nn.Module):
             # Output: b x 32 x 32 x 32
             # pass
             # TODO:
-            self.layer0 = torch.nn.Sequential(
+            self.decoder = torch.nn.Sequential(
                 nn.Linear(512, 2048)
             )
             self.layer1 = torch.nn.Sequential(
@@ -55,14 +55,11 @@ class SingleViewto3D(nn.Module):
             # TODO:
             self.decoder = nn.Sequential(
                 nn.Linear(512, 1024),
-                nn.ReLU(),
-                nn.BatchNorm1d(1024),
-                
-                nn.Linear(1024, 2048),
-                nn.ReLU(),
-                nn.BatchNorm1d(2048),
-                
-                nn.Linear(2048, self.n_point * 3),
+                nn.LeakyReLU(),
+                nn.Linear(1024, self.n_point),
+                nn.LeakyReLU(),
+                nn.Linear(self.n_point, self.n_point * 3),
+                nn.Tanh()
             )            
         elif args.type == "mesh":
             # Input: b x 512
@@ -75,14 +72,9 @@ class SingleViewto3D(nn.Module):
             self.decoder = nn.Sequential(
                 nn.Linear(512, 1024),
                 nn.ReLU(),
-                nn.BatchNorm1d(1024),
-                
                 nn.Linear(1024, 2048),
                 nn.ReLU(),
-                nn.BatchNorm1d(2048),
-                
                 nn.Linear(2048, num_vertices * 3),
-                nn.Tanh()  
             )
             
 
@@ -103,27 +95,24 @@ class SingleViewto3D(nn.Module):
         # call decoder
         if args.type == "vox":
             # TODO:
-                res = self.layer0(encoded_feat)
-                # res = feats.view((-1, 64, 2, 2, 2))
-                res = res.view((-1, 256, 2, 2, 2))
-                res = self.layer1(res)
-                res = self.layer2(res)
-                res = self.layer3(res)
-                res = self.layer4(res)
-                res = self.layer5(res)
-                return res
+                voxel_pred = self.decoder(encoded_feat)
+                voxel_pred = voxel_pred.view((-1, 256, 2, 2, 2))
+                voxel_pred = self.layer1(voxel_pred)
+                voxel_pred = self.layer2(voxel_pred)
+                voxel_pred = self.layer3(voxel_pred)
+                voxel_pred = self.layer4(voxel_pred)
+                voxel_pred = self.layer5(voxel_pred)
+                return voxel_pred
 
         elif args.type == "point":
             # TODO:
             point_cloud_flat = self.decoder(encoded_feat)
-            pointclouds_pred = point_cloud_flat.view(-1, self.n_point, 3)    
-            pointclouds_pred = torch.tanh(pointclouds_pred)         
+            pointclouds_pred = point_cloud_flat.view(-1, self.n_point, 3)           
             return pointclouds_pred
 
         elif args.type == "mesh":
             # TODO:
-            deform_vertices_pred = self.decoder(encoded_feat)  
-            deform_vertices_pred = deform_vertices_pred * 0.1          
+            deform_vertices_pred = self.decoder(encoded_feat)          
             mesh_pred = self.mesh_pred.offset_verts(deform_vertices_pred.reshape([-1,3]))
             return  mesh_pred          
 
