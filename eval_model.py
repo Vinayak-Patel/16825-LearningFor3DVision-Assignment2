@@ -180,8 +180,8 @@ def evaluate_model(args):
         if (step % args.vis_freq) == 0 and metrics != False:
         #     # visualization block
               if args.type == 'point':
-                  visualizer.render_point_cloud(predictions, output_path='results/q2_5_'+str(step)+'_pred.gif')
-                  visualizer.render_mesh(mesh_gt, output_path='results/q2_5_'+str(step)+'_gt.gif')
+                  visualizer.render_point_cloud(predictions, output_path='results/q2_5_'+str(step)+'_1000_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q2_5_'+str(step)+'_1000_gt.gif')
                   img.save('results/q2_5_'+str(step)+'_1000_img.png')
                   
               if args.type == 'vox':
