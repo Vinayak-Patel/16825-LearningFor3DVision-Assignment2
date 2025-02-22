@@ -142,7 +142,7 @@ def evaluate_model(args):
     start_time = time.time()
 
     thresholds = [0.01, 0.02, 0.03, 0.04, 0.05]
-    model_viz = SingleViewto3D(args)
+    
     avg_f1_score_05 = []
     avg_f1_score = []
     avg_p_score = []
@@ -180,7 +180,7 @@ def evaluate_model(args):
         if (step % args.vis_freq) == 0 and metrics != False:
         #     # visualization block
               if args.type == 'point':
-                  model_viz.visualize_features(f'results/q3_3/features_step_{step}')
+                  model.visualize_features(f'results/q3_3/features_step_{step}')
                   visualizer.render_point_cloud(predictions, output_path='results/q3_3/q3_3_'+str(step)+'_pred.gif')
                   visualizer.render_mesh(mesh_gt, output_path='results/q3_3/q3_3_'+str(step)+'_gt.gif')
                   img.save('results/q3_3/q3_3_'+str(step)+'_img.png')
