@@ -113,8 +113,8 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
             textures = torch.ones_like(vertices)
             textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
         else:
-            textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
-
+            # textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
+            textures = torch.ones((1,1,3), device=vertices.device)
         # if vertices.numel() > 0:
         #     textures = torch.ones_like(vertices)
         # else:
