@@ -142,7 +142,7 @@ def evaluate_model(args):
     start_time = time.time()
 
     thresholds = [0.01, 0.02, 0.03, 0.04, 0.05]
-    model_viz = SingleViewto3D()
+    model_viz = SingleViewto3D(args)
     avg_f1_score_05 = []
     avg_f1_score = []
     avg_p_score = []
