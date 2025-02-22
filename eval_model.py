@@ -180,9 +180,9 @@ def evaluate_model(args):
         if (step % args.vis_freq) == 0 and metrics != False:
         #     # visualization block
               if args.type == 'point':
-                  visualizer.render_point_cloud(predictions, output_path='results/q2_5_'+str(step)+'_9000_pred.gif')
-                  visualizer.render_mesh(mesh_gt, output_path='results/q2_5_'+str(step)+'_9000_gt.gif')
-                  img.save('results/q2_5_'+str(step)+'_9000_img.png')
+                  visualizer.render_point_cloud(predictions, output_path='results/q3_3/q3_3_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q3_3/q3_3_'+str(step)+'_gt.gif')
+                  img.save('results/q3_3/q3_3_'+str(step)+'_img.png')
                   
               if args.type == 'vox':
                   predictions = predictions.permute(0,1,4,3,2)
