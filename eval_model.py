@@ -180,6 +180,7 @@ def evaluate_model(args):
         if (step % args.vis_freq) == 0 and metrics != False:
         #     # visualization block
               if args.type == 'point':
+                  SingleViewto3D.visualize_features(f'results/q3_3/features_step_{step}')
                   visualizer.render_point_cloud(predictions, output_path='results/q3_3/q3_3_'+str(step)+'_pred.gif')
                   visualizer.render_mesh(mesh_gt, output_path='results/q3_3/q3_3_'+str(step)+'_gt.gif')
                   img.save('results/q3_3/q3_3_'+str(step)+'_img.png')

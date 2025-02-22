@@ -10,9 +10,17 @@ class SingleViewto3D(nn.Module):
     def __init__(self, args):
         super(SingleViewto3D, self).__init__()
         self.device = args.device
+        self.activations = {}
         if not args.load_feat:
             vision_model = torchvision_models.__dict__[args.arch](pretrained=True)
             self.encoder = torch.nn.Sequential(*(list(vision_model.children())[:-1]))
+            
+            self.encoder[0].register_forward_hook(self._get_activation('conv1'))  # First conv layer
+            self.encoder[4].register_forward_hook(self._get_activation('layer1')) # ResNet layer1
+            self.encoder[5].register_forward_hook(self._get_activation('layer2')) # ResNet layer2
+            self.encoder[6].register_forward_hook(self._get_activation('layer3')) # ResNet layer3
+            self.encoder[7].register_forward_hook(self._get_activation('layer4')) # ResNet layer4
+            
             self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
 
 
@@ -77,10 +85,20 @@ class SingleViewto3D(nn.Module):
                 nn.Linear(2048, num_vertices * 3),
             )
             
+    def _get_activation(self, name):
+        """Hook function to store activations"""
+        def hook(module, input, output):
+            self.activations[name] = output
+        return hook
+
+    def get_intermediate_features(self):
+        """Return stored activations"""
+        return self.activations
+    
 
     def forward(self, images, args):
         results = dict()
-
+        self.activations = {}
         total_loss = 0.0
         start_time = time.time()
 
@@ -116,3 +134,24 @@ class SingleViewto3D(nn.Module):
             mesh_pred = self.mesh_pred.offset_verts(deform_vertices_pred.reshape([-1,3]))
             return  mesh_pred          
 
+    def visualize_features(self, output_dir):
+        """
+        Visualize intermediate features
+        Args:
+            output_dir: Directory to save visualizations
+        """
+        import matplotlib.pyplot as plt
+        import os
+        
+        os.makedirs(output_dir, exist_ok=True)
+        
+        for name, feat in self.activations.items():
+            # Take first sample in batch
+            feature_map = feat[0].mean(dim=0)  # Average across channels
+            
+            plt.figure(figsize=(10, 10))
+            plt.imshow(feature_map.detach().cpu(), cmap='viridis')
+            plt.title(f'Feature Map: {name}')
+            plt.colorbar()
+            plt.savefig(os.path.join(output_dir, f'feature_map_{name}.png'))
+            plt.close()
