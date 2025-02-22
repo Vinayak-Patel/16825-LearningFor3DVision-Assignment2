@@ -99,7 +99,6 @@ def evaluate(predictions, mesh_gt, thresholds, args):
         if vertices_src.shape == torch.Size([0, 3]):
             print("Meshes are empty")
             return False
-
         pred_points = sample_points_from_meshes(mesh_src, args.n_points)
         pred_points = utils_vox.Mem2Ref(pred_points, H, W, D)
         # Apply a rotation transform to align predicted voxels to gt mesh
@@ -186,6 +185,7 @@ def evaluate_model(args):
                   img.save('results/q2_2_'+str(step)+'_img.png')
                   
               if args.type == 'vox':
+                  predictions = predictions.permute(0,1,4,3,2)
                   visualizer.render_voxels(predictions, output_path='results/q2_1_'+str(step)+'_pred.gif')
                   visualizer.render_mesh(mesh_gt, output_path='results/q2_1_'+str(step)+'_gt.gif')
                   img.save('results/q2_1_'+str(step)+'_img.png')
