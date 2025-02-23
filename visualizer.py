@@ -33,7 +33,7 @@ def get_mesh_renderer(image_size=512):
     raster_set = rdr.RasterizationSettings(
         image_size=image_size, 
         blur_radius=0.0, 
-        faces_per_pixel=1
+        faces_per_pixel=1,
         max_faces_per_bin=100000, 
         bin_size=None
     )
