@@ -34,6 +34,8 @@ def get_mesh_renderer(image_size=512):
         image_size=image_size, 
         blur_radius=0.0, 
         faces_per_pixel=1
+        max_faces_per_bin=100000, 
+        bin_size=None
     )
     
     lights = rdr.PointLights(device=device, location=[[0.0, 0.0, -3.0]])
@@ -74,49 +76,106 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30, textures=None, fov=60, fps=30, elev=1):
     vertices = mesh.verts_list()[0]
     faces = mesh.faces_list()[0]
-    vertices = vertices.unsqueeze(0)  # (N_v, 3) -> (1, N_v, 3)
-    faces = faces.unsqueeze(0)     # (N_f, 3) -> (1, N_f, 3)
+    vertices = vertices.to(device)
+    faces = faces.to(device)
     
-   
+    # Add batch dimension if needed
+    if len(vertices.shape) == 2:
+        vertices = vertices.unsqueeze(0)
+    if len(faces.shape) == 2:
+        faces = faces.unsqueeze(0)
+    
+        # Create simple vertex colors (normalized position-based coloring)
     if textures is None:
-        
-        # if vertices.numel() > 0:
-        #     textures = torch.ones_like(vertices)
-        #     textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
-        # else:
-        #     textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
-        if vertices.numel() > 0:
-            # Create vertex colors as a simple color gradient
-            verts_rgb = torch.ones_like(vertices)  # (1, V, 3)
-            # Create normalized vertex positions as colors
-            verts_rgb = (vertices - vertices.min()) / (vertices.max() - vertices.min())
-            # Ensure the shape is correct for TexturesVertex
-            if len(verts_rgb.shape) == 2:
-                verts_rgb = verts_rgb.unsqueeze(0)
-            textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
-        else:
-            # Handle empty mesh case
-            verts_rgb = torch.ones_like(vertices)
-            textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
+        verts_rgb = torch.ones_like(vertices[0])  # Remove batch dim for calculation
+        verts_normalized = (vertices[0] - vertices[0].min()) / (vertices[0].max() - vertices[0].min())
+        verts_rgb = verts_normalized
+        verts_rgb = verts_rgb.unsqueeze(0)  # Add batch dimension back
+        textures = pytorch3d.renderer.TexturesVertex(verts_rgb.to(device))
     
-    render_mesh = pytorch3d.structures.Meshes(
-            verts=vertices,
-            faces=faces,
-            textures=textures,
+    # Create mesh with textures
+    meshes = pytorch3d.structures.Meshes(
+        verts=vertices,
+        faces=faces,
+        textures=textures
     ).to(device)
     
-    azimuth = np.linspace(-180, 180, num=num_views)
-    R, T = pytorch3d.renderer.look_at_view_transform(dist = distance, elev = elev, 
-                                                     azim =azimuth)
-    cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= fov, device=device)
-    renderer = utils.get_mesh_renderer(image_size=image_size, device=device)
-    lights = pytorch3d.renderer.PointLights(location=[[0, 0, 3]], device=device)
+    # Setup camera parameters
+    azim = torch.linspace(-180, 180, num_views)
+    R, T = pytorch3d.renderer.look_at_view_transform(
+        dist=distance,
+        elev=torch.ones(num_views) * elev,
+        azim=azim
+    )
     
-    images = renderer(render_mesh.extend(num_views), cameras= cameras, lights= lights)
-    images = images.detach().cpu().numpy()[..., :3]
-    images = (images * 255).clip(0, 255).astype(np.uint8)
-    imageio.mimsave(output_path, images, fps=fps, format='gif', loop=0)
+    # Create cameras
+    cameras = pytorch3d.renderer.FoVPerspectiveCameras(
+        R=R,
+        T=T,
+        fov=fov,
+        device=device
+    )
+    
+    # Create renderer with updated settings
+    renderer = get_mesh_renderer(image_size=image_size, device=device)
+    
+    # Render
+    meshes_batch = meshes.extend(num_views)
+    with torch.no_grad():
+        images = renderer(meshes_batch, cameras=cameras)
+    
+    # Convert images to numpy and save
+    images = images.cpu().numpy()
+    images = (images[..., :3] * 255).astype(np.uint8)
+    
+    # Ensure output directory exists
+    import os
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    # Save as gif
+    imageio.mimsave(output_path, images, fps=fps, loop=0)
     return
+    
+   
+    # if textures is None:
+        
+    #     # if vertices.numel() > 0:
+    #     #     textures = torch.ones_like(vertices)
+    #     #     textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+    #     # else:
+    #     #     textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
+    #     if vertices.numel() > 0:
+    #         # Create vertex colors as a simple color gradient
+    #         verts_rgb = torch.ones_like(vertices)  # (1, V, 3)
+    #         # Create normalized vertex positions as colors
+    #         verts_rgb = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+    #         # Ensure the shape is correct for TexturesVertex
+    #         if len(verts_rgb.shape) == 2:
+    #             verts_rgb = verts_rgb.unsqueeze(0)
+    #         textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
+    #     else:
+    #         # Handle empty mesh case
+    #         verts_rgb = torch.ones_like(vertices)
+    #         textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
+    
+    # render_mesh = pytorch3d.structures.Meshes(
+    #         verts=vertices,
+    #         faces=faces,
+    #         textures=textures,
+    # ).to(device)
+    
+    # azimuth = np.linspace(-180, 180, num=num_views)
+    # R, T = pytorch3d.renderer.look_at_view_transform(dist = distance, elev = elev, 
+    #                                                  azim =azimuth)
+    # cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= fov, device=device)
+    # renderer = utils.get_mesh_renderer(image_size=image_size, device=device)
+    # lights = pytorch3d.renderer.PointLights(location=[[0, 0, 3]], device=device)
+    
+    # images = renderer(render_mesh.extend(num_views), cameras= cameras, lights= lights)
+    # images = images.detach().cpu().numpy()[..., :3]
+    # images = (images * 255).clip(0, 255).astype(np.uint8)
+    # imageio.mimsave(output_path, images, fps=fps, format='gif', loop=0)
+    # return
 
 # Voxel Rendering
 def render_voxels(voxels, output_path, num_views=120):
