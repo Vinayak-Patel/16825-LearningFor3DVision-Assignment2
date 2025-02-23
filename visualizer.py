@@ -73,7 +73,7 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
     imageio.mimsave(output_path, images.astype(np.uint8), fps=30, loop=0)
 
 # Mesh Rendering
-def render_mesh(mesh, output_path, num_views=60, image_size=256, distance=2.7, elevation=30, textures=None, fov=60, fps=30, elev=1):
+def render_mesh(mesh, output_path, num_views=30, image_size=256, distance=2.7, textures=None, fov=60, fps=10, elev=1):
     vertices = mesh.verts_list()[0]
     faces = mesh.faces_list()[0]
     vertices = vertices.to(device)
