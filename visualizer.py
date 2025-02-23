@@ -72,33 +72,6 @@ def render_point_cloud(points, output_path, num_views=120, image_size=256):
 
 # Mesh Rendering
 def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, elevation=30, textures=None, fov=60, fps=30, elev=1):
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    # mesh = mesh.to(device)
-    # verts = mesh.verts_packed()
-    # verts_rgb = torch.ones_like(verts)[None]  # Default white color
-    # mesh.textures = rdr.TexturesVertex(verts_features=verts_rgb)
-    
-    # rasterizer = rdr.MeshRasterizer(
-    #     cameras=rdr.FoVPerspectiveCameras(device=device),
-    #     raster_settings=rdr.RasterizationSettings(
-    #         image_size=512, blur_radius=0.0, faces_per_pixel=1
-    #     )
-    # )
-    # shader = rdr.HardPhongShader(device=device, cameras=rdr.FoVPerspectiveCameras(device=device))
-    # renderer = rdr.MeshRenderer(rasterizer=rasterizer, shader=shader)
-    # angles = torch.linspace(-180, 180, num_views)
-    # images = []
-    
-    # for angle in tqdm(angles):
-    #     R, T = rdr.look_at_view_transform(dist=distance, elev=elevation, azim=angle)
-    #     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, device=device)
-        
-    #     torch.cuda.synchronize()
-    #     render = renderer(mesh, cameras=cameras)
-    #     images.append((render[0, ..., :3].detach().cpu().numpy() * 255).astype(np.uint8))
-    
-    # imageio.mimsave(output_path, images, fps=30)
-    # print(device)
     vertices = mesh.verts_list()[0]
     faces = mesh.faces_list()[0]
     vertices = vertices.unsqueeze(0)  # (N_v, 3) -> (1, N_v, 3)
@@ -113,13 +86,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
             textures = torch.ones_like(vertices)
             textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
         else:
-            # textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
-            textures = torch.ones((1,1,3), device=vertices.device)
-        # if vertices.numel() > 0:
-        #     textures = torch.ones_like(vertices)
-        # else:
-        #     print("Vertices are empty; using default zero textures.")
-        #     textures = torch.zeros(1, 1, 1)
+            textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
     
     render_mesh = pytorch3d.structures.Meshes(
             verts=vertices,
@@ -143,75 +110,9 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
 
 # Voxel Rendering
 def render_voxels(voxels, output_path, num_views=120):
-    # max_val = 1.0
-    # min_val = 0.0
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # # Ensure voxels are within valid range
-    # voxels = voxels.clamp(0, 1)
-    
-    # print("Voxel min:", voxels.min().item(), "Voxel max:", voxels.max().item())
-
-    # data = voxels.detach().cpu().numpy()
-    # data = np.squeeze(data)
-
-    # size = voxels.shape[0]
-    
-    # # Smooth and apply marching cubes
-    # vertices, faces = mcubes.marching_cubes(mcubes.smooth(data), isovalue=0.5)
-
-    # # Convert to PyTorch tensors and ensure correct dtype
-    # vertices = torch.tensor(vertices, dtype=torch.float32, device=device)
-    # faces = torch.tensor(faces.astype(np.int64), device=device)
-    # vertices = vertices.unsqueeze(0)
-    # faces = faces.unsqueeze(0)
-    # # Normalize vertices
-    # vertices = (vertices / size) * (max_val - min_val) + min_val
-
-    # # Ensure correct shape for textures
-    # colors = torch.ones_like(vertices, device=device)  # (1, V, 3)
-    # textures = pytorch3d.renderer.TexturesVertex(verts_features=colors)
-
-    # mesh = Meshes([vertices], [faces], textures=textures).to(device)
-
-    # # Mesh Renderer
-    # renderer = get_mesh_renderer()
-
-    # num_steps = num_views
-    # radius = 2.0
-    # images = []
-    
-    # for i in range(num_steps):
-    #     angle = 2 * torch.pi * i / num_steps
-    #     angle = torch.tensor(angle, device=device)
-    #     camera_position = torch.tensor([[radius * torch.cos(angle), 
-    #                                      0, 
-    #                                      radius * torch.sin(angle)]], device=device)
-        
-    #     at = torch.tensor([[0.0, 0.0, 0.0]], device=device)
-    #     up = torch.tensor([[0.0, 1.0, 0.0]], device=device)
-
-    #     R, T = rdr.look_at_view_transform(eye=camera_position, at=at, up=up)
-    #     cameras = rdr.FoVPerspectiveCameras(R=R, T=T, fov=60, device=device)
-
-    #     lights = pytorch3d.renderer.PointLights(location=[[0, 0, -3]], device=device)
-        
-    #     print("checkpoint1")
-    #     rend = renderer(mesh, cameras=cameras, lights=lights)
-    #     print("checkpoint2")
-    #     rend = rend.detach().cpu().numpy()[0, ..., :3]
-    #     print("checkpoint3")
-    #     images.append((rend * 255).clip(0, 255).astype(np.uint8))
-    
-    # duration = 1000 // 15
-    # imageio.mimsave(output_path, images, duration=duration, loop=0)
     voxels = voxels.squeeze(1)
     mesh = pytorch3d.ops.cubify(voxels, thresh=0.3).to(device)
     
-    # # Check if the mesh is empty
-    # if len(mesh.verts_list()[0]) == 0:
-    #     print("Generated mesh is empty. Skipping visualization.")
-    #     return
     render_mesh(mesh, output_path,textures=None,num_views= 120, 
                     image_size=256, distance= 3, fov=60, fps=12, elev=1)
 
