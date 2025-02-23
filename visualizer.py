@@ -80,11 +80,24 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
    
     if textures is None:
         
+        # if vertices.numel() > 0:
+        #     textures = torch.ones_like(vertices)
+        #     textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+        # else:
+        #     textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
         if vertices.numel() > 0:
-            textures = torch.ones_like(vertices)
-            textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+            # Create vertex colors as a simple color gradient
+            verts_rgb = torch.ones_like(vertices)  # (1, V, 3)
+            # Create normalized vertex positions as colors
+            verts_rgb = (vertices - vertices.min()) / (vertices.max() - vertices.min())
+            # Ensure the shape is correct for TexturesVertex
+            if len(verts_rgb.shape) == 2:
+                verts_rgb = verts_rgb.unsqueeze(0)
+            textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
         else:
-            textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
+            # Handle empty mesh case
+            verts_rgb = torch.ones_like(vertices)
+            textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
     
     render_mesh = pytorch3d.structures.Meshes(
             verts=vertices,
