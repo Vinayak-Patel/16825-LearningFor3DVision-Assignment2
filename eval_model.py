@@ -187,14 +187,14 @@ def evaluate_model(args):
                   
               if args.type == 'vox':
                   predictions = predictions.permute(0,1,4,3,2)
-                  visualizer.render_voxels(predictions, output_path='results/q2_1_'+str(step)+'_pred.gif')
-                  visualizer.render_mesh(mesh_gt, output_path='results/q2_1_'+str(step)+'_gt.gif')
-                  img.save('results/q2_1_'+str(step)+'_img.png')
+                  visualizer.render_voxels(predictions, output_path='results/q3_3_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q3_3_'+str(step)+'_gt.gif')
+                  img.save('results/q3_3_'+str(step)+'_img.png')
                   
               if args.type == 'mesh':
-                  visualizer.render_mesh(predictions, output_path='results/q2_3_'+str(step)+'_pred.gif')
-                  visualizer.render_mesh(mesh_gt, output_path='results/q2_3_'+str(step)+'_gt.gif')
-                  img.save('results/q2_3_'+str(step)+'_img.png')
+                  visualizer.render_mesh(predictions, output_path='results/q3_3_'+str(step)+'_pred.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q3_3_'+str(step)+'_gt.gif')
+                  img.save('results/q3_3_'+str(step)+'_img.png')
                   
       
 
