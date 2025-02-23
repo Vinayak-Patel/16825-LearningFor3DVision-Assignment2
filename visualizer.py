@@ -117,7 +117,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     )
     
     # Create renderer with updated settings
-    renderer = get_mesh_renderer(image_size=image_size, device=device)
+    renderer = get_mesh_renderer(image_size=image_size)
     
     # Render
     meshes_batch = meshes.extend(num_views)
