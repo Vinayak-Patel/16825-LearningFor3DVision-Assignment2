@@ -102,7 +102,7 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     render_mesh = pytorch3d.structures.Meshes(
             verts=vertices,
             faces=faces,
-            textures=pytorch3d.renderer.TexturesVertex(textures),
+            textures=textures,
     ).to(device)
     
     azimuth = np.linspace(-180, 180, num=num_views)
