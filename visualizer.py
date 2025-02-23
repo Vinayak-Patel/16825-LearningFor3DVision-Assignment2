@@ -136,46 +136,6 @@ def render_mesh(mesh, output_path, num_views=30, image_size=256, distance=2.7, t
     imageio.mimsave(output_path, images, fps=fps, loop=0)
     return
     
-   
-    # if textures is None:
-        
-    #     # if vertices.numel() > 0:
-    #     #     textures = torch.ones_like(vertices)
-    #     #     textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
-    #     # else:
-    #     #     textures = torch.ones_like(vertices)  # Default to zero textures for empty tensors
-    #     if vertices.numel() > 0:
-    #         # Create vertex colors as a simple color gradient
-    #         verts_rgb = torch.ones_like(vertices)  # (1, V, 3)
-    #         # Create normalized vertex positions as colors
-    #         verts_rgb = (vertices - vertices.min()) / (vertices.max() - vertices.min())
-    #         # Ensure the shape is correct for TexturesVertex
-    #         if len(verts_rgb.shape) == 2:
-    #             verts_rgb = verts_rgb.unsqueeze(0)
-    #         textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
-    #     else:
-    #         # Handle empty mesh case
-    #         verts_rgb = torch.ones_like(vertices)
-    #         textures = pytorch3d.renderer.TexturesVertex(verts_rgb)
-    
-    # render_mesh = pytorch3d.structures.Meshes(
-    #         verts=vertices,
-    #         faces=faces,
-    #         textures=textures,
-    # ).to(device)
-    
-    # azimuth = np.linspace(-180, 180, num=num_views)
-    # R, T = pytorch3d.renderer.look_at_view_transform(dist = distance, elev = elev, 
-    #                                                  azim =azimuth)
-    # cameras = pytorch3d.renderer.FoVPerspectiveCameras(R=R, T=T, fov= fov, device=device)
-    # renderer = utils.get_mesh_renderer(image_size=image_size, device=device)
-    # lights = pytorch3d.renderer.PointLights(location=[[0, 0, 3]], device=device)
-    
-    # images = renderer(render_mesh.extend(num_views), cameras= cameras, lights= lights)
-    # images = images.detach().cpu().numpy()[..., :3]
-    # images = (images * 255).clip(0, 255).astype(np.uint8)
-    # imageio.mimsave(output_path, images, fps=fps, format='gif', loop=0)
-    # return
 
 # Voxel Rendering
 def render_voxels(voxels, output_path, num_views=120):
