@@ -182,7 +182,7 @@ def evaluate_model(args):
               if args.type == 'point':
                   model.visualize_features(f'results/q3_3/features_step_{step}')
                   visualizer.render_point_cloud(predictions, output_path='results/q3_3/q3_3_'+str(step)+'_pred.gif')
-                  visualizer.render_mesh(mesh_gt, output_path='results/q3_3/q3_3_'+str(step)+'_gt.gif')
+                  visualizer.render_mesh(mesh_gt, output_path='results/q3_3_'+str(step)+'_gt.gif')
                   img.save('results/q3_3/q3_3_'+str(step)+'_img.png')
                   
               if args.type == 'vox':
