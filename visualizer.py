@@ -79,8 +79,6 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     
    
     if textures is None:
-        # textures = torch.ones_like(vertices)  # (1, N_v, 3)
-        # textures = (vertices - vertices.min()) / (vertices.max() - vertices.min())
         
         if vertices.numel() > 0:
             textures = torch.ones_like(vertices)
@@ -104,7 +102,6 @@ def render_mesh(mesh, output_path, num_views=120, image_size=512, distance=2.7, 
     images = renderer(render_mesh.extend(num_views), cameras= cameras, lights= lights)
     images = images.detach().cpu().numpy()[..., :3]
     images = (images * 255).clip(0, 255).astype(np.uint8)
-    # images = images.cpu().detach().numpy()
     imageio.mimsave(output_path, images, fps=fps, format='gif', loop=0)
     return
 
